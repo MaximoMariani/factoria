@@ -1,0 +1,5 @@
+:root { font-family: Inter, system-ui, Arial, sans-serif; }
+body { margin: 0; background: #f5f7fb; color: #1f2937; }
+.container { max-width: 720px; margin: 48px auto; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+button { border: 0; background: #2563eb; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+pre { margin-top: 16px; background: #0f172a; color: #cbd5e1; padding: 12px; border-radius: 8px; overflow: auto; }
