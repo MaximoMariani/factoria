@@ -1,0 +1,16 @@
+{
+  "name": "factoria",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @factoria/web",
+    "build": "npm run build -w @factoria/web",
+    "lint": "npm run lint -w @factoria/web",
+    "db:generate": "npm run prisma:generate -w @factoria/db",
+    "db:push": "npm run prisma:push -w @factoria/db",
+    "db:seed": "npm run prisma:seed -w @factoria/db"
+  }
+}
