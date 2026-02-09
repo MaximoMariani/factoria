@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum ProductionStatus {
+  DRAFT
+  PLANNED
+  RUNNING
+  DONE
+}
+
+enum ProcessName {
+  CUT
+  SEW
+  PRINT
+  FINISH
+}
+
+enum TaskPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TaskType {
+  AUTO_FABRIC
+  AUTO_TRIMS
+  AUTO_PAYMENT
+  MANUAL
+}
+
+model Product {
+  id                   Int      @id @default(autoincrement())
+  name                 String
+  defaultConsumptionKg Float
+  wastePct             Float    @default(0.0)
+  rollKg               Float    @default(25)
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  productionOrders ProductionOrder[]
+}
+
+model ProductionOrder {
+  id                   Int              @id @default(autoincrement())
+  code                 String           @unique
+  title                String?
+  productId            Int
+  plannedUnits         Int              @default(0)
+  consumptionKgPerUnit Float
+  wastePct             Float
+  rollKg               Float
+  status               ProductionStatus @default(DRAFT)
+  etaAt                DateTime?
+
+  totalUnits           Int   @default(0)
+  kgNeeded             Float @default(0)
+  rollsNeeded          Int   @default(0)
+  fabricCost           Float @default(0)
+  processCost          Float @default(0)
+  trimCost             Float @default(0)
+  totalCost            Float @default(0)
+  unitCost             Float @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  colorPlans ProductionColorPlan[]
+  trimUsages ProductionTrimUsage[]
+  tasks      Task[]
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+}
+
+model ProductionColorPlan {
+  id                Int    @id @default(autoincrement())
+  productionOrderId Int
+  colorName         String
+  units             Int
+  kgRequired        Float  @default(0)
+
+  productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+}
+
+model CostProcessRate {
+  id       Int         @id @default(autoincrement())
+  name     ProcessName @unique
+  unitCost Float
+  vendor   String?
+  active   Boolean     @default(true)
+}
+
+model TrimItem {
+  id        Int      @id @default(autoincrement())
+  name      String
+  unitCost  Float
+  vendor    String?
+  unitLabel String   @default("unit")
+  active    Boolean  @default(true)
+
+  productionTrimUsages ProductionTrimUsage[]
+}
+
+model ProductionTrimUsage {
+  id                Int   @id @default(autoincrement())
+  productionOrderId Int
+  trimItemId        Int
+  qtyPerGarment     Float
+
+  productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  trimItem        TrimItem        @relation(fields: [trimItemId], references: [id], onDelete: Restrict)
+
+  @@unique([productionOrderId, trimItemId])
+}
+
+model FabricPrice {
+  id         Int     @id @default(autoincrement())
+  vendor     String
+  fabricType String
+  pricePerKg Float
+  active     Boolean @default(true)
+}
+
+model Task {
+  id                Int          @id @default(autoincrement())
+  type              TaskType     @default(MANUAL)
+  title             String
+  done              Boolean      @default(false)
+  priority          TaskPriority @default(MEDIUM)
+  assignee          String?
+  dueDate           DateTime?
+  productionOrderId Int?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  productionOrder ProductionOrder? @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@unique([type, productionOrderId])
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Production OS</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>Production OS</h2>
+    <button data-view="dashboard">Dashboard</button>
+    <button data-view="productions">Producciones</button>
+    <button data-view="products">Productos & Consumos</button>
+    <button data-view="costs">Costos</button>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <h1 id="title">Dashboard</h1>
+      <div id="actions"></div>
+    </header>
+
+    <section id="dashboard" class="view"></section>
+    <section id="productions" class="view hidden"></section>
+    <section id="products" class="view hidden"></section>
+    <section id="costs" class="view hidden"></section>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
