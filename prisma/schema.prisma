@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductionStatus {
+  PLANNED
+  CUTTING
+  SEWING
+  PRINTING
+  FINISHING
+  DONE
+  BLOCKED
+}
+
+enum PurchaseType {
+  FABRIC
+  TRIM
+  SERVICE
+}
+
+enum ChecklistKey {
+  FABRIC_PURCHASED
+  FABRIC_DELIVERED
+  TRIMS_COMPLETE
+  PAYMENT_SENT
+  IN_WORKSHOP
+}
+
+model Product {
+  id                   String             @id @default(cuid())
+  name                 String
+  sku                  String?            @unique
+  defaultWastePct      Decimal            @default(0)
+  defaultConsumptionKg Decimal
+  models               ProductModel[]
+  processTemplates     ProductProcessTemplate[]
+  trimTemplates        ProductTrimTemplate[]
+  orders               ProductionOrder[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model ProductModel {
+  id                   String                  @id @default(cuid())
+  productId            String
+  name                 String
+  code                 String?
+  consumptionKg        Decimal?
+  product              Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lineItems            ProductionOrderLineItem[]
+
+  @@unique([productId, name])
+}
+
+model FabricItem {
+  id             String            @id @default(cuid())
+  name           String
+  color          String?
+  unit           String            @default("kg")
+  pricePerKg     Decimal
+  supplierId     String?
+  supplier       Supplier?         @relation(fields: [supplierId], references: [id])
+  orders         ProductionOrder[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model TrimItem {
+  id             String               @id @default(cuid())
+  name           String
+  unit           String               @default("unit")
+  defaultPrice   Decimal
+  supplierId     String?
+  supplier       Supplier?            @relation(fields: [supplierId], references: [id])
+  orderTrims     ProductionOrderTrim[]
+  templateUsages ProductTrimTemplate[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model ProcessItem {
+  id             String                    @id @default(cuid())
+  name           String
+  code           String?                   @unique
+  defaultPrice   Decimal
+  supplierId     String?
+  supplier       Supplier?                 @relation(fields: [supplierId], references: [id])
+  orderProcesses ProductionOrderProcess[]
+  templateUsages ProductProcessTemplate[]
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+}
+
+model Supplier {
+  id         String        @id @default(cuid())
+  name       String
+  phone      String?
+  email      String?
+  notes      String?
+  fabrics    FabricItem[]
+  trims      TrimItem[]
+  processes  ProcessItem[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model ProductProcessTemplate {
+  id              String      @id @default(cuid())
+  productId       String
+  processItemId   String
+  unitPrice       Decimal
+  applyToAll      Boolean     @default(true)
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  processItem     ProcessItem @relation(fields: [processItemId], references: [id])
+
+  @@unique([productId, processItemId])
+}
+
+model ProductTrimTemplate {
+  id                 String   @id @default(cuid())
+  productId          String
+  trimItemId         String
+  consumptionPerUnit Decimal
+  unitPrice          Decimal
+  applyToAll         Boolean  @default(true)
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  trimItem           TrimItem @relation(fields: [trimItemId], references: [id])
+
+  @@unique([productId, trimItemId])
+}
+
+model ProductionOrder {
+  id                   String                 @id @default(cuid())
+  code                 String                 @unique
+  productId            String
+  fabricItemId         String?
+  status               ProductionStatus       @default(PLANNED)
+  wastePct             Decimal
+  fabricPricePerKg     Decimal                @default(0)
+  etaAt                DateTime?
+
+  totalUnits           Int                    @default(0)
+  totalKg              Decimal                @default(0)
+  fabricCost           Decimal                @default(0)
+  processCost          Decimal                @default(0)
+  trimCost             Decimal                @default(0)
+  totalCost            Decimal                @default(0)
+  unitCost             Decimal                @default(0)
+
+  product              Product                @relation(fields: [productId], references: [id])
+  fabricItem           FabricItem?            @relation(fields: [fabricItemId], references: [id])
+  lineItems            ProductionOrderLineItem[]
+  processes            ProductionOrderProcess[]
+  trims                ProductionOrderTrim[]
+  checklist            ProductionChecklistItem[]
+  events               EventTimeline[]
+  purchaseItems        PurchaseListItem[]
+
+  plannedAt            DateTime               @default(now())
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+}
+
+model ProductionOrderLineItem {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  productModelId     String?
+  color              String
+  size               String?
+  quantity           Int
+  consumptionKg      Decimal
+  kgRequired         Decimal         @default(0)
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  productModel       ProductModel?   @relation(fields: [productModelId], references: [id])
+
+  @@index([productionOrderId, color])
+}
+
+model ProductionOrderProcess {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  processItemId      String
+  unitPrice          Decimal
+  applicableUnits    Int?
+  totalCost          Decimal         @default(0)
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  processItem        ProcessItem     @relation(fields: [processItemId], references: [id])
+
+  @@index([productionOrderId])
+}
+
+model ProductionOrderTrim {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  trimItemId         String
+  consumptionPerUnit Decimal
+  unitPrice          Decimal
+  applicableUnits    Int?
+  totalQuantity      Decimal         @default(0)
+  totalCost          Decimal         @default(0)
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  trimItem           TrimItem        @relation(fields: [trimItemId], references: [id])
+
+  @@index([productionOrderId])
+}
+
+model ProductionChecklistItem {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  key                ChecklistKey
+  checked            Boolean         @default(false)
+  checkedAt          DateTime?
+  checkedBy          String?
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@unique([productionOrderId, key])
+}
+
+model PurchaseListItem {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  type               PurchaseType
+  refId              String?
+  description        String
+  quantity           Decimal
+  unit               String
+  estimatedCost      Decimal         @default(0)
+  supplierId         String?
+  dueDate            DateTime?
+  resolved           Boolean         @default(false)
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@index([productionOrderId, resolved])
+}
+
+model EventTimeline {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  actorId            String
+  eventType          String
+  payload            Json?
+  createdAt          DateTime        @default(now())
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@index([productionOrderId, createdAt])
+}
