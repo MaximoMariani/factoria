@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int          @id @default(autoincrement())
+  name        String
+  sku         String       @unique
+  createdAt   DateTime     @default(now())
+  quantities  QuantityItem[]
+  productions Production[]
+}
+
+model Fabric {
+  id             Int      @id @default(autoincrement())
+  name           String
+  consumptionMts Float
+  unitCost       Float
+}
+
+model Trim {
+  id       Int    @id @default(autoincrement())
+  name     String
+  unitCost Float
+}
+
+model Supplier {
+  id   Int    @id @default(autoincrement())
+  name String
+  type String
+}
+
+model Production {
+  id                  Int            @id @default(autoincrement())
+  code                String         @unique
+  productId           Int
+  product             Product        @relation(fields: [productId], references: [id])
+  status              ProductionStatus @default(PLANNED)
+  plannedUnitCost     Float
+  actualUnitCost      Float?
+  plannedFabricMeters Float
+  actualFabricMeters  Float?
+  plannedTotalCost    Float
+  actualTotalCost     Float?
+  createdAt           DateTime       @default(now())
+  closedAt            DateTime?
+  quantities          QuantityItem[]
+}
+
+model QuantityItem {
+  id            Int        @id @default(autoincrement())
+  productionId  Int
+  production    Production @relation(fields: [productionId], references: [id])
+  productId     Int
+  product       Product    @relation(fields: [productId], references: [id])
+  color         String
+  size          String
+  plannedQty    Int
+  actualQty     Int?
+}
+
+enum ProductionStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+}
