@@ -7,59 +7,26 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <h1>Production OS — Hoy</h1>
-    <p>Velocidad, claridad y decisión.</p>
-  </header>
+  <aside class="sidebar">
+    <h2>Production OS</h2>
+    <button data-view="dashboard">Dashboard</button>
+    <button data-view="productions">Producciones</button>
+    <button data-view="products">Productos & Consumos</button>
+    <button data-view="costs">Costos</button>
+  </aside>
 
-  <main class="grid">
-    <section class="card">
-      <h2>Producciones en curso</h2>
-      <div id="inProgress"></div>
-    </section>
+  <div class="content">
+    <header class="topbar">
+      <h1 id="title">Dashboard</h1>
+      <div id="actions"></div>
+    </header>
 
-    <section class="card">
-      <h2>Próximas 3 planificadas</h2>
-      <div id="nextPlanned"></div>
-    </section>
+    <section id="dashboard" class="view"></section>
+    <section id="productions" class="view hidden"></section>
+    <section id="products" class="view hidden"></section>
+    <section id="costs" class="view hidden"></section>
+  </div>
 
-    <section class="card full">
-      <h2>Pendientes accionables</h2>
-      <ul id="pending"></ul>
-    </section>
-
-    <section class="card full">
-      <h2>Planning Wizard (rápido)</h2>
-      <form id="wizard">
-        <div class="row">
-          <input name="product" placeholder="Producto/modelo" value="Remera Basic" required />
-          <input name="wastePct" type="number" step="0.1" value="8" placeholder="Merma %" />
-          <input name="consumoKgPorPrenda" type="number" step="0.001" value="0.22" placeholder="Consumo kg/prenda" />
-          <input name="precioKg" type="number" step="0.01" value="6000" placeholder="Precio kg tela" />
-        </div>
-        <div class="row">
-          <input name="color1" value="Negro" placeholder="Color 1" />
-          <input name="qty1" type="number" value="700" placeholder="Cantidad 1" />
-          <input name="color2" value="Blanco" placeholder="Color 2" />
-          <input name="qty2" type="number" value="500" placeholder="Cantidad 2" />
-        </div>
-        <div class="row">
-          <input name="cutting" type="number" value="150" placeholder="Corte $/prenda" />
-          <input name="sewing" type="number" value="500" placeholder="Confección $/prenda" />
-          <input name="printing" type="number" value="100" placeholder="Estampa $/prenda" />
-          <input name="finishing" type="number" value="50" placeholder="Finishing $/prenda" />
-        </div>
-        <div class="row">
-          <input name="labelCons" type="number" step="0.1" value="1" placeholder="Etiquetas por prenda" />
-          <input name="labelPrice" type="number" step="0.01" value="120" placeholder="Precio etiqueta" />
-          <label><input type="checkbox" name="startNow" /> Iniciar producción ahora</label>
-          <button type="submit">Planificar/Iniciar</button>
-        </div>
-      </form>
-      <pre id="summary"></pre>
-    </section>
-  </main>
-
-  <script src="/app.js" type="module"></script>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>
